@@ -84,33 +84,15 @@ class UserController {
   async updateUser(req, res, next) {
     try {
       const { id } = req.user;
-      let img;
-
-      if (req.files.img) {
-        if (req.files.img.size > 102400) {
-          return res.status(403).json({ message: 'Picture size must be less than 100Kb' });
-        }
-        img = req.files.img;
-      }
-      let { email, nickname, makeAdmin } = req.body;
-      let fileName = uuid.v4() + '.jpg';
-      img && img.mv(path.resolve(__dirname, '..', 'static', fileName));
-
+      let { email, nickname, img, makeAdmin } = req.body;
+      console.log(img);
       const user = await User.findOne({
         where: { id },
       });
 
       if (user) {
-        //проверяем и удаляем старую аватарку
-        if (user.img) {
-          let oldImgPath = path?.resolve(__dirname, '..', 'static', user.img);
-          fs.unlink(oldImgPath, err => {
-            if (err) console.warn('img not found', err);
-          });
-        }
-        // сэтаем новую
         if (img) {
-          user.img = fileName;
+          user.img = img;
         }
       }
       if (email && email !== 'undefined') {

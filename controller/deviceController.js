@@ -7,22 +7,14 @@ const fs = require('fs');
 class DeviceController {
   async create(req, res, next) {
     try {
-      let { name, price, brandId, typeId, info } = req.body;
-      if ((!name, !price, !brandId, !typeId)) {
-        return res.status(400).json({ message: 'need to enter name, price, brandId, typeId' });
-      }
-      let img;
-
-      if (req.files.img) {
-        if (req.files.img.size > 102400) {
-          return res.status(403).json({ message: 'Picture size must be less than 100Kb' });
-        }
-        img = req.files.img;
+      let { name, price, brandId, typeId, img, info } = req.body;
+      if ((!name, !price, !brandId, !typeId, !img)) {
+        return res
+          .status(400)
+          .json({ message: 'need to enter name, price, brandId, typeId, img link' });
       }
 
-      let fileName = uuid.v4() + '.jpg';
-      img.mv(path.resolve(__dirname, '..', 'static', fileName));
-      const device = await Device.create({ name, price, brandId, typeId, img: fileName });
+      const device = await Device.create({ name, price, brandId, typeId, img });
 
       if (info) {
         info = JSON.parse(info);
@@ -112,17 +104,8 @@ class DeviceController {
   async updateDevice(req, res) {
     try {
       const { id } = req.params;
-      let img;
 
-      if (req.files.img) {
-        if (req.files.img.size > 102400) {
-          return res.status(403).json({ message: 'Picture size must be less than 100Kb' });
-        }
-        img = req.files.img;
-      }
-      let { name, price, brandId, typeId, info } = req.body;
-      let fileName = uuid.v4() + '.jpg';
-      img && img.mv(path.resolve(__dirname, '..', 'static', fileName));
+      let { name, price, brandId, typeId, img, info } = req.body;
 
       const device = await Device.findOne({
         where: { id },
@@ -131,10 +114,7 @@ class DeviceController {
 
       if (device) {
         if (img) {
-          fs.unlink(path.resolve(__dirname, '..', 'static', device.img), err => {
-            if (err) console.warn('img not found', err);
-          });
-          device.img = fileName;
+          device.img = img;
         }
         if (name && name !== 'undefined') {
           device.name = name;
